@@ -1,0 +1,521 @@
+# Computational-Finance-Using-R-Book
+# It contains total R code, from the book "Computational Finance using R" by Argimiro Arratia.
+#User: Kranthi Kumar Yeldi:
+#GitHub: https://github.com/yeldikrantthikumarr
+#Email: yeldikrantthikumarr@gmail.com
+
+# Chapter1- An Abridged introduction to Finance.
+install.packages("quantmod")
+library(quantmod)
+getSymbols('GE',src='yahoo', from="2000-01-01", to="2009-12-30")
+GE["2000-01-01/2000-01-20"]
+geAdj = GE$GE.Adjusted["2000-01-01/2000-01-20"] ; geAdj
+max(geAdj); min(geAdj); mean(geAdj)
+chartSeries(GE)
+chartSeries(GE,TA=NULL,subset='2001-01::2001-02')
+
+symbols=c('VLIC','GE','KO','AAPL','MCD')}
+getSymbols(symbols,src='yahoo',from="2012-02-01",to="2013-02-01")
+#obtain adjusted closed
+
+VLICad = VLIC$VLIC.Adjusted; GEad= GE$GE.Adjusted;
++ KOad=KO$KO.Adjusted; AAPLad=AAPL$AAPL.Adjusted;
++ MCDad = MCD$MCD.Adjusted
+#compute cumulative sum (cumsum) of daily returns (Delt)
++ #Remove first term of the series, with [-1,],
+  + #since cumsum is not defined for it.
+  vl = cumsum((Delt(VLICad)*100)[-1,])
+ge = cumsum((Delt(GEad)*100)[-1,])
+ko = cumsum((Delt(KOad)*100)[-1,])
+ap = cumsum((Delt(AAPLad)*100)[-1,])
+md = cumsum((Delt(MCDad)*100)[-1,])
+###range of values for the plot
+lim = c(min(vl,ge,ko,ap,md),max(vl,ge,ko,ap,md))
+###the plot
+plot(vl,main="",ylim=lim,xlab="dates",ylab=1"% benefits")
+lines(ge,col="green"); lines(ko,col="red")
+lines(ap,col="violet"); lines(md,col="yellow")
+legend(x="topleft",cex=0.4,c("VLIC","GE","KO","AAPL","MCD"),
+       + lty=1, col=c("black","green","red","violet","yellow")) 
+
+#Chapter2-Stastics of Financial Time Series
+
+require(quantmod)
+getSymbols("DJIA",src="FRED") ##DJIA from 1896-May
+plot(DJIA['1960/2010'],main="DJIA")
+
+getSymbols("AAPL",src=1"yahoo") ##data starts from 2007
+aplRd = periodReturn(AAPL,period="daily")
+plot(aplRd, main="APPLE daily returns")
+
+alv=na.omit(daxR$alvR)
+quantile(alv,probs=c(0,1,0.25,0.5,0.75))
+
+basicStats(na.omit(daxR[,2:5])) 
+
+alvR <- na.omit(daxR$alvR)
+mean(alvR) ## the mean
+var(alvR) ## variance
+sd(alvR) ## standard deviation
+kurtosis(alvR, method="moment") #gives real kurtosis
+skewness(alvR) 
+boxplot(daxR[,2:5]) 
+
+alvR <- na.omit(daxR$alvR)
+hist(alvR,probability=T,xlab="ALV.DE returns",main=NULL) 
+
+x = seq(-4,4,0.01)
+plot(x,dnorm(x,mean=0.5,sd=1.3),type='1') 
+
+alv <- na.omit(daxR$alvR); DS <- density(alv)
+yl=c(min(DS$y),max(DS$y)) #set y limits
+hist(alv,probability=T,xlab="ALV RETURNS", main=NULL,ylim=yl)
+rug(alv); lines(DS); a=seq(min(alv),max(alv),0.001)
+points(a,dnorm(a,mean(alv),sd(alv)), type="1",lty=2)
+# if you rather have a red line for the normal distribution do:
+lines(a,dnorm(a,mean(alv), sd(alv)),col="red") 
+
+shapiro.test(alv)
+
+cov(daxRlog[,2:5],use="complete.obs")
+
+aapl=AAPL['2009-04/2009-05']; m=length(aapl\$AAPL.Close);
+ohlc <-aapl[c("AAPL.Open","AAPL.High","AAPL.Low","AAPL.Close")]
+vClose <- volatility(ohlc, n=m,calc="close",N=252)
+vParkinson <- volatility(ohlc, n=m,calc="parkinson",N=252)
+vGK <- volatility(ohlc, n=m,calc="garman", N=252)
+vClose[m]; vParkinson[m]; vGK[m]; 
+
+require(quantmod); getSymbols("DJIA",src="FRED")
+serie=DJIA["1978/2001"]
+price=as.numeric(serie) #extract numeric value of price
+time = index(serie) #extract the indices
+x=1:length(price)
+model=lm(log(price)˜x) 
+expo=exp(model$coef[1]+model$coef[2]*x)
+plot(x=time,y=price, main="Dow Jones",type="l")
+lines(time,expo,col=2,lwd=2) 
+
+# Part I: preprocessing the data #
+wdir="path-to-your-working-directory"; setwd(wdir)
+# load the financial data from wdir
+ALV = read.csv(paste(wdir,"/ALV.csv", sep=""), header=T)
+# extract 1 year of data from the AdjClose column
+alvAC= ALV$AdjClose[1:252]
+# repeat the previous instructs. with BMW, CBK, TKA.
+date= ALV$Date[1:252] # extract the column Date
+date <- as.Date(date) # and declare date as true date format
+##put all together into a data.frame
+dax =data.frame(date,alvAC,bmwAC,cbkAC,tkaAC)
+# plot Adjusted prices vs date for ALV
+plot(dax$date,dax$alvAC, type="l",main="ALV.DE",
+     + xlab="dates",ylab="adj. close")
+# Compute Returns. First define vectors of appropriate length
+alvR <- 1:252; bmwR <- 1:252; cbkR <- 1:252; tkaR <- 1:252
+for (i in 1:252){alvR[i] <-(alvAC[i]/alvAC[i+1]) -1 }
+#same with bmwR, cbkR, tkaR
+# Remember dates are ordered descending. Make table Returns
+daxR =data.frame(dax$date,alvR,bmwR,cbkR,tkaR)
+# Compute log returns (omit column of dates)
+daxRlog <- log(daxR[2:5] +1)
+#plot returns and log returns (in red) and see coincidences:
+plot(dax$date,daxR$alvR, type="l",xlab="dates",ylab="returns")
+lines(dax$date,daxRlog$alvR, type="l",col="red")
+# Part II: Basic statistics #
+library(fBasics) ## load the library "fBasics"
+basicStats(daxRlog$alvR)
+# You can compute basic stats to a full data frame,
++ ## omitting non numeric data
+  basicStats(na.omit(daxRlog[,2:5]))
+#Use a boxplot to help visualising and interpret results
+boxplot(daxRlog[,2:5])
+#compute covariance matrix
+cov(daxRlog[,2:5],use="complete.obs")
+#Extras: To save your table in your working directory
+write.table(dax,file="dax") ## or as .csv use write.csv
+#To read the data saved in working directory
+dax = read.table("dax", header=T)
+
+appl = getSymbols("AAPL",src="yahoo")
+apRd= periodReturn(appl,period="daily",type="log")
+dsd=density(apRd) #estimate density of daily log ret
+yl=c(min(dsd$y),max(dsd$y)) #set y limits
+plot(dsd,main=NULL,ylim=yl)
+#plot the normal density with mean, stdv of apRd
+a=seq(min(apRd),max(apRd),0.001)
+points(a,dnorm(a,mean(apRd),sd(apRd)), type="l",lty=2)
+
+#Chapter3-Correlations, Causalities and Similarities
+
+cor(na.omit(daxRlog[,2:5]),method="pearson")
+
+acf(na.omit(daxRlog$alvR),main="acf of ALV",ylim=c(-0.2,0.2))
+
+acf(na.omit(daxRlog$alvR)ˆ2,main=" ",ylim=c(-0.3,0.5))
+
+cor(na.omit(daxRlog[,2:5]),method="kendall") 
+
+
+library("lmtest")
+library("AER") ##Econometric library data
+data("USMoney")
+#To know if m1 causes gnp
+grangertest(gnp˜m1, order=3,data=USMoney)
+
+#To know if gnp causes m1
+grangertest(m1˜gnp, order=3,data=USMoney)
+
+# alternative way of specifying the last test
+grangertest(USMoney[,1],USMoney[,2],order=3)
+
+
+IBEX<-read.table("Ibex0809",sep="",header=T)
+dd <-as.dist(2*(1-cor(IBEX)))
+hc <-hclust(dd,method="ward") #other: complete,single,average
+plot(hc,main=paste("ward"," method"),axes=TRUE,xlab="",sub="")
+#compute the cut at mean height K:
+l<-length(hc$height); hh<-sort(hc$height); K<-mean(hh[1:l])
+abline(h=K,lty=2,lwd=2) #draw the cut
+#branches below K make clusters, above go to singletons
+groups <- cutree(hc, h = K) ##obtain clusters
+numgp <- max(groups) #number of clusters.
+#extract the names of each group and convert to list
+W <- list(names(groups[groups==1]))
+for(i in 2:numgp){W <- c(W,list(names(groups[groups==i])))}
+W #see partition at level <=K
+
+
+k=12; #number of clusters
+kc=kmeans(t(IBEX),k) #t() gives transpose table
+#obtain the clusters
+groups <- kc$cluster; numgp <- max(groups)
+W <- list(names(groups[groups==1]))
+for(i in 2:numgp){W <- c(W,list(names(groups[groups==i])))}
+W
+
+#Chapter4-Time Series Models in Finance
+
+getFX("EUR/USD") #download EUR/USD rates from oanda.com
+plot(EURUSD)
+acf(EURUSD)
+pacf(EURUSD) 
+
+library(fArma)
+ar1=armaFit(˜ar(1),method="yule-walker",data=EURUSD)
+summary(ar1)
+predict(ar1,n.ahead=5,n.back=80)
+
+rho = ARMAacf(ar=c(1.38, -5.854e-01)
+
+              library(fArma)
+              sp500=read.csv("SP500_shiller.csv")
+              sp500PE = na.omit(sp500$P.E10)
+              ts=diff(log(sp500PE)) ##compute returns
+              ts=ts-mean(ts) ##subtract mean
+              bestAIC=1e9
+              for(p in 0:5) for (q in 0:5)
+              { formula = as.formula(paste(sep="","ts˜arma(",p,",",q,")"))
+              tsARMA = tryCatch(armaFit(formula, data=ts),
+                                error=function(e) FALSE,
+                                warning=function(w) FALSE )
+              if( !is.logical(tsARMA) ){
+                AIC = tsARMA@fit$aic
+                if(AIC < bestAIC){
+                  bestAIC=AIC
+                  bestARMA=tsARMA
+                  bestPQ= c(p,q) }
+              }
+              else print("FALSE")
+              }
+              bestPQ
+              summary(bestARMA)
+
+              
+              
+library(fGarch);
+daxRl = read.table("daxRlog", header=T)
+alvRl =na.omit(daxRl$alvR) #extract log returns of alv
+alvRl2 <- alvRl^2 #compute square log returns
+acf(alvRl2)
+pacf(alvRl2)
+arch5=garchFit(formula=~garch(5,0),data=alvRl,cond.dist="norm")
+summary(arch5)
+
+plot(arch5)
+plot(alvRl,type='l') 
+predict(arch5,7)
+predict(arch5,7,plot=TRUE)
+
+library(fGarch)
+sp500=read.csv("SP500_shiller.csv")
+sp500PE = na.omit(sp500$P.E10)
+ts=diff(log(sp500PE)) #compute returns
+ts=ts-mean(ts)
+Box.test(tsˆ2)
+
+armaGarch = garchFit(formula=~arma(2,4)+garch(1,1),data=ts)
+summary(armaGarch)
+
+library(tseries); library(xts)
+inData = as.xts(read.zoo('SP500_shiller.csv',sep=',',
+                         header=T,format='%Y-%m-%d'))
+data=inData['1900/2012']
+sp500 = na.omit(data$SP500)
+sp500PE= na.omit(data$P.E10)
+terasvirta.test(x=sp500PE,y=sp500)
+              
+library(xts); library(quantmod);
+library(nnet); library(kernlab);
+library(caret) #for some data handling functions
+library(Metrics)#Measures of prediction accuracy
+sp500 = as.xts(read.zoo('SP500_shiller.csv',sep=',',
+                        + header=T, format=''%Y-%m-%d''))
+data=sp500['1900/2012']
+sp500PE = na.omit(data$P.E10) #feature:P/E MA(10)
+ret=diff(log(data$SP500)) #compute returns
+ret=na.trim(ret-mean(na.omit(ret)))
+
+#Compute some features: lags 1,2,3; PE, lags 1,2
+feat = merge(na.trim(lag(ret,1)),na.trim(lag(ret,2)),
+             + na.trim(lag(ret,3)),sp500PE,na.trim(lag(sp500PE,1)),
+             + na.trim(lag(sp500PE,2)), all=FALSE)
+#TARGET to predict: returns (ret)
+dataset = merge(feat,ret,all=FALSE) ##(1)
+##Label columns of dataset
+colnames(dataset) = c("lag.1", "lag.2","lag.3","PE10",
+                      + "PE10.1","PE10.2", "TARGET")
+##Divide data in training (75%) and testing (25%) with caret
+index = 1:nrow(dataset)
+trainindex= createDataPartition(index,p=0.75,list=FALSE)
+##process class sets as data frames
+training = as.data.frame(dataset[trainindex,])
+rownames(training) = NULL
+testing = as.data.frame(dataset[-trainindex,])
+rownames(testing) = NULL
+##Build and tune SVM & Nnet models, bootstrapping 200 reps.
+bootControl <- trainControl(number=200)
+prePro <- c("center", "scale") #data is centered and scaled
+set.seed(2)
+idxTra = ncol(training)
+##SVM model:
+svmFit <- train(training[,-idxTra],training[,idxTra],
+                + method="svmRadial",tuneLength=5,
+                + trControl=bootControl,preProc=prePro)
+svmFit
+svmBest <- svmFit$finalModel ##extract best model
+svmBest
+##Nnet model
+nnetFit<-train(training[,-idxTra],training[,idxTra)],
+               + method="nnet",tuneLength=5,trace=FALSE,
+               + trControl=bootControl,preProc=prePro)
+nnetFit
+nnetBest <- nnetFit$finalModel ##tune parameters size,decay
+summary(nnetBest)
+
+
+#Build Predictors
+predsvm <- predict(svmBest,testing[,-ncol(testing)])
+prednet<-predict(nnetBest,testing[,-ncol(testing)],type="raw")
+#EVALUATION (MSE, MAE)
+actualTS<-testing[,ncol(testing)] ##the true series
+#For SVM
+predicTS<-predsvm
+mse(actual=actualTS,predicted=predicTS)
+[1] 0.002044547
+mae(actual=actualTS,predicted=predicTS)
+[1] 0.0325104
+#For Nnet
+predicTS<-prednet
+mse(actual=actualTS,predicted=predicTS)
+[1] 0.002359158
+mae(actual=actualTS,predicted=predicTS)
+[1] 0.03923168
+
+#Chapter-5 Brownian Motion, Binomial Trees and Monte Carlo Simulation
+
+#inputs:
+alpha=0; sigma=1; T=1; n=2ˆ(12); X0=0.1;
+###Generate 1 trajectory
+dt=T/n
+t=seq(0,T,by=dt)
+x=c(X0,alpha*dt+sigma*sqrt(dt)*rnorm(n,mean=0,sd=1))
+Xt=cumsum(x)
+plot(t,Xt,type=’l’,xlab="time")
+
+library(sde)
+mu=0.16; sigma=0.2; P0=40; T = 1/12 ##1 month
+nt=50; n=2ˆ(8)
+###Generate nt trajectories
+dt=T/n; t=seq(0,T,by=dt)
+X=matrix(rep(0,length(t)*nt), nrow=nt)
+for (i in 1:nt) {X[i,]= GBM(x=P0,r=mu,sigma=sigma,T=T,N=n)}
+#Plot
+ymax=max(X); ymin=min(X) #bounds for simulated prices
+plot(t,X[1,],t=’l’,ylim=c(ymin, ymax), col=1,
+     + ylab="Price P(t)",xlab="time t")
+for(i in 2:nt){lines(t,X[i,], t=’l’,ylim=c(ymin, ymax),col=i)}
+mean(X[,n+1])*exp(-mu*T)
+
+library(fOptions)
+GBSOption(TypeFlag = "c", S = 60, X = 65, Time = 1/4, r = 0.08,
+          + b = 0.08, sigma = 0.30)
+
+S0=100; r=0.10; D1=D2=2; t1=1/4; t2=1/2
+#apply discount of dividend to final stock price
+S = S0 - D1*exp(-r*t1) - D2*exp(-r*t2)
+GBSOption(TypeFlag ="c", S=S, X=90, Time=3/4, r=r, b=r,
+          sigma=0.25)
+
+
+library(fOptions)
+GBSGreeks(Selection="delta",TypeFlag="c",S=60,X=65,
+          Time=1/4,r=0.08,b=0.08,sigma=0.30)
+
+GBSCharacteristics(TypeFlag="c",S=60,X=65,Time=1/4,r=0.08,
+                   b=0.08,sigma=0.30) 
+
+library("fOptions")
+CRRBinomialTreeOption(TypeFlag = "pa", S = 50, X = 50,
+                      Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
+# output : Option Price: 4.488459
+#to plot an option tree (for put american)
+CRRTree = BinomialTreeOption(TypeFlag = "pa", S = 50, X = 50,
+                             Time = 0.4167, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
+BinomialTreePlot(CRRTree, dy = 1, cex = 0.8, ylim = c(-6, 7),
+                 xlab = "n", ylab = "Option Value")
+title(main = "Option Tree")
+
+library("fExoticOptions")
+TW=TurnbullWakemanAsianApproxOption(TypeFlag="c",S=100,SA=100,
+                                    X=100, Time=1/12, time=1/12, tau=0, r=0.1, b=0.1, sigma=0.4)
+print(TW)
+
+
+#Chapter6- Trade on Pattern Mining or Value Estimation
+
+getSymbols("AAPL")
+chartSeries(AAPL,subset='2008-06::2009-04',
+            + theme=chartTheme('white',up.col='green',dn.col='red'),
+            + TA=c(addBBands(n=20,sd=2,),addSMA(n=50,col="blue"),
+                   + addSMA(n=10,col="black"),addRSI(n=14)))
+
+
+getFinancials(’AAPL’) #returns AAPL.f to "env"
+viewFin(AAPL.f,"CF","A") #Annual Cash Flows
+viewFin(AAPL.f,"BS","A","2009/2011") #Annual Balance Sheets
+
+applBS = viewFin(AAPL.f, "BS","A")
+colnames(applBS) #give years
+rownames(applBS) #give 42 rows labelled with financial indicators
+CA=applBS["Total Current Assets","2009-09-26"]
+#returns the value of Total Current Assets in 2009
+#same as
+applBS[10,4] #since row 10=Total Current Assets, col 4=2009-09-26
+CL=applBS["Total Current Liabilities","2009-09-26"]
+
+CurrentRat = CA/CL
+CurrentRat
+
+#Chapter7-Optimization Heuristics in Finance
+
+parinit = c(0.1,0.1,0.1,0.1)
+opt = optim(parinit,LI,r=r,method="SANN",
+            + control=list(fnscale=-1,maxit=5000))
+opt$par
+
+Vl = sqrt(opt$par[1]/(1-opt$par[2]-opt$par[3]))
+
+#Chapter8-Portfolio Optimization
+
+names(SMALLCAP) #to see the contents of the data set
+Data = SMALLCAP.RET #to get returns
+Data = Data[, c("BKE","FCEL","GG","OII","SEB")]
+covData <- covEstimator(Data) ; covData
+
+##MV|solveRshortExact:
+shortSpec <- portfolioSpec()
+setSolver(shortSpec) <- "solveRshortExact"
+shortFrontier <- portfolioFrontier(Data,spec=shortSpec,
+                                   + constraints="Short")
+print(shortFrontier) #report results for portfolio:1,13,25,
+37,50
+Frontier <- shortFrontier ##Plot the Efficient Frontier
+frontierPlot(Frontier,frontier="both",risk="Sigma",type="l")
+## Plot some portfolios
+minvariancePoints(Frontier,pch=19,col="red") #the MVP point
+##Position of each asset in the sigma-mu plane
+singleAssetPoints(Frontier,risk="Sigma",pch=19,cex=1.5,
+                  + col=topo.colors(6))
+
+#MVP: the minimum Variance.
+minvariancePortfolio(Data)
+##EP(mu): an efficient portfolio for given target return
+mu = 0.05; Spec = portfolioSpec()
+setSolver(Spec) = "solveRshortExact"
+setTargetReturn(Spec) = mu
+efficientPortfolio(Data, Spec)
+
+##MaxR: Global maximum return portfolio
+## maximize: (w1,w2,w3,w4,w5)*covData$mu
+## subject to: w1+w2+w3+w4+w5 = 1
+##Use the linear programming solver lp from lpSolve:
+f.obj <- covData$mu
+f.con <- matrix(c(1,1,1,1,1), nrow=1, byrow=TRUE)
+f.dir <- "="
+f.rhs <- 1
+lp ("max", f.obj, f.con, f.dir, f.rhs)
+Success: the objective function is 0.06882631
+lp ("max", f.obj, f.con, f.dir, f.rhs)$solution
+[1] 0 1 0 0 0
+## portfolio containing only FCEL
+
+
+RiskF = portfolioSpec()
+setRiskFreeRate(RiskF) = 0.012 ##at 1.2% risk-free rate
+setSolver(RiskF) <- "solveRshortExact"
+##Market portfolio for this Risk free rate
+M = tangencyPortfolio(Data,spec=RiskF,constraints="Short"); M
+
+##recompute the efficient frontier to consider risk-free
+asset
+Frontier=portfolioFrontier(Data,spec=RiskF,constraints=
+                             "Short")
+frontierPlot(Frontier,risk="Sigma",type="l",lwd=3)
+##Capital Market Line
+tangencyLines(Frontier,risk= "Sigma",col ="blue",lwd=3)
+##plot Market Portfolio
+cmlPoints(Frontier,pch=19,col="purple")
+
+##Beta of BKE w.rto MARKET index and T90 interest rates
+CAPM.beta(SMALLCAP.RET[,"BKE",drop=false],SMALLCAP.RET
+          [,"MARKET",
+            + drop=false],Rf=SMALLCAP[,"T90",drop=false])
+#Some betas w.r.to portfolio M of Data. 1) Get returns of M
+Mw = c(0.6342,0.5526,0.1879,-0.1589,-0.2159 ) ##weights of M
+##build returns in same period as assets BKE, ...
+RM = Return.portfolio(Data,weights=Mw)
+##Beta of SEB wrto M and T90 interests
+CAPM.beta(SMALLCAP.RET[,"SEB",drop=false],Rb=RM,
+          + Rf=SMALLCAP[,"T90",drop=false])
+##same but for a fixed interest rate of 3%
+CAPM.beta(SMALLCAP.RET[,"SEB",drop=false],Rb=RM,Rf=0.03)
+##Note that you get same result with Rf=0
+##Beta of M wrto to MARKET index and any fixed interest rate
+CAPM.beta(RM,SMALLCAP.RET[,"MARKET",drop=false])
+
+Data = SMALLCAP.RET
+Data = Data[, c("BKE","FCEL","GG","OII","SEB")]
+#MV|solveRquadprog:
+#Compute the long-only MV model for 50 points (default)
+longFrontier = portfolioFrontier(Data); longFrontier
+
+f.obj <- c(covData$mu,-covData$mu)
+f.con <-matrix(c(1,1,1,1,1,-1,-1,-1,-1,-1,
+                 + 1,1,1,1,1,1,1,1,1,1,
+                 + 1,1,1,1,1,1,1,1,1,1),nrow=3, byrow=TRUE)
+f.dir <- c("=",">=","<=")
+bound <- 2 ##alternatives 3, 1
+f.rhs <- c(1,-bound,bound)
+lp ("max", f.obj, f.con, f.dir, f.rhs)
+lp ("max", f.obj, f.con, f.dir, f.rhs)$solution
+
